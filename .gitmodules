@@ -1,0 +1,3 @@
+[submodule "dep/glThings"]
+	path = dep/glThings
+	url = https://github.com/hacktheegg/glThings.git
