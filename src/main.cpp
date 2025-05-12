@@ -6,7 +6,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "physSolver.hpp"
+#include "pendulum.hpp"
+//#include "physSolver.hpp"
 #include "renderer.hpp"
 #include "shader_s.hpp"
 
@@ -23,33 +24,6 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
-  }
-  if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && !clickState) {
-    clickState = true;
-    double xpos = 0.0;
-    double ypos = 0.0;
-    glfwGetCursorPos(window, &xpos, &ypos);
-    physSolver::newPhysObj(
-      {
-        ((float)xpos/512*2)-1.0f,
-        -(((float)ypos/512*2)-1.0f)
-      },
-      0.02f
-    );
-  } else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != GLFW_PRESS) {
-    clickState = false;
-  }
-  if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-    double xpos = 0.0;
-    double ypos = 0.0;
-    glfwGetCursorPos(window, &xpos, &ypos);
-    physSolver::newPhysObj(
-      {
-        ((float)xpos/512*2)-1.0f,
-        -(((float)ypos/512*2)-1.0f)
-      },
-      0.02f
-    );
   }
 }
 
@@ -79,25 +53,21 @@ int main() {
     return -1;
   }
 
-
-
   //// SHADERS ////
   Shader ourShader("./shader.vert", "./shader.frag");
 
 
+  renderer::colour green({0.0f,1.0f,0.0f});
+
+  dPendulum::pendulum innerPendulum;
+  dPendulum::pendulum outerPendulum;
+  delete [] outerPendulum.originPosition;
+  outerPendulum.originPosition = innerPendulum.pendulumPosition;
+  outerPendulum.angle = 90.0f;
+  innerPendulum.updatePendulumPosition();
+  outerPendulum.updatePendulumPosition();
+
   
-  physSolver::setConstraint({ 0.0f, 0.0f }, 0.9f);
-
-  for (int x = -10; x < 10; x++) {
-    for (int y = -10; y < 10; y++) {
-
-      physSolver::newPhysObj({ (float)x/25, (float)y/25 }, 0.02f);
-
-    }
-  }
-  //physSolver::newPhysObj({ 0.8f, 0.0f }, 0.1f);
-  //physSolver::newPhysObj({ -0.75, 0.0f }, 0.15f);
-
   renderer::init();
 
 
@@ -123,45 +93,20 @@ int main() {
       0.80f, 0.40, 0.20, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+
+    innerPendulum.render(green);
+    outerPendulum.render(green);
+
+
+
+
     ourShader.use();
 
-
-
-    if (newTime > 5) {
-      physSolver::update(deltaTime);
-    }
-
-    //physSolver::objects[0].origin[1] = physSolver::objects[0].origin[1] + ;
-
-
-
-    physSolver::renderObjects();
-
-    // Modes (Swap out the first object given to glDrawElements
-    /*
-    * GL_POINTS
-    * GL_LINES
-    * GL_LINE_STRIP
-    * GL_LINE_LOOP
-    * GL_TRIANGLES
-    * GL_TRIANGLE_STRIP
-    * GL_TRIANGLE_FAN
-    * autocomplete says there are others as well
-    */
     glfwSwapBuffers(window);
     glfwPollEvents();
 
     oldTime = newTime;
   }
-
-
-
-
-
-
-
-
-
 
   /*
   glDeleteVertexArrays(1, &VAO);
